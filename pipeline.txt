@@ -1,0 +1,44 @@
+pipeline {
+    agent any 
+    environment {
+        GIT_CRED_ID = 'github-ssh-key'
+        REPO_URL = 'https://github.com/chaitanya00/code-mvn'
+    }
+    stages {
+        
+        stage('Git Checkout') {
+            agent any 
+            steps {
+                checkout([
+	                $class: 'GitSCM', 
+	                branches: [[name: '*/master']],  
+	                userRemoteConfigs: [[credentialsId: GIT_CRED_ID, url: REPO_URL]]
+	                ])
+            }    
+	           
+            }
+        
+      stage('Maven Clean Install') {
+            agent any
+            steps {
+                
+	               sh "ls -l"
+	               sh "mvn clean install"
+    
+             
+            }
+        }
+        
+        
+        stage('Deploying Zip On Author CRXDE') {
+            agent any
+            steps {
+               
+	               
+                sh "curl -u 'admin':'admin' -F file=@/var/lib/jenkins/workspace/pipeline@2/ui.apps/target/aem-guides-wknd.ui.apps-0.0.1-SNAPSHOT.zip -F name=samplepackage -F force=true -F install=true http://localhost:4502/crx/packmgr/service.jsp "
+                
+            }
+        }
+
+    }
+}
